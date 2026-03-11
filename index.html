@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+
+<html lang="id">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>WSProxy Miner-Style Dashboard</title>
+<style>
+    :root{
+      --bg:#070b14;
+      --bg2:#0b1020;
+      --panel:#111827cc;
+      --panel2:#0f172acc;
+      --line:rgba(148,163,184,.16);
+      --text:#e5eefc;
+      --muted:#94a3b8;
+      --blue:#5eead4;
+      --cyan:#38bdf8;
+      --green:#4ade80;
+      --amber:#fbbf24;
+      --red:#fb7185;
+      --violet:#818cf8;
+      --shadow:0 20px 50px rgba(0,0,0,.34);
+      --radius:20px;
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0;height:100%}
+    body{
+      font-family:Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      color:var(--text);
+      background:
+        radial-gradient(1200px 600px at -10% -20%, rgba(56,189,248,.16), transparent 50%),
+        radial-gradient(1000px 520px at 110% -10%, rgba(129,140,248,.16), transparent 48%),
+        linear-gradient(180deg, #05070d, #0a1020 42%, #060a12);
+      min-height:100%;
+    }
+    .wrap{max-width:1400px;margin:0 auto;padding:22px 18px 42px}
+    .top{
+      display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;
+      margin-bottom:18px
+    }
+    .brand{
+      display:flex;align-items:center;gap:14px
+    }
+    .logo{
+      width:52px;height:52px;border-radius:16px;
+      background:linear-gradient(135deg, rgba(56,189,248,.25), rgba(129,140,248,.24));
+      border:1px solid rgba(255,255,255,.08);
+      display:grid;place-items:center;box-shadow:var(--shadow);font-size:24px
+    }
+    h1{margin:0;font-size:clamp(1.3rem,2vw,2rem)}
+    .sub{margin-top:5px;color:var(--muted);font-size:.94rem}
+    .toolbar{display:flex;gap:10px;flex-wrap:wrap}
+    .chip,.btn,.input{
+      border:1px solid var(--line);
+      background:rgba(15,23,42,.72);
+      backdrop-filter: blur(12px);
+      border-radius:999px;color:var(--text);padding:10px 14px;
+      box-shadow:var(--shadow)
+    }
+    .btn{cursor:pointer}
+    .chip b{color:var(--green)}
+    .grid{display:grid;gap:16px}
+    .stats{grid-template-columns:repeat(4,minmax(0,1fr));margin-bottom:16px}
+    .card,.panel{
+      border:1px solid var(--line);
+      background:linear-gradient(180deg, rgba(17,24,39,.92), rgba(15,23,42,.76));
+      backdrop-filter: blur(16px);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow)
+    }
+    .card{padding:18px}
+    .label{font-size:.78rem;letter-spacing:.09em;color:var(--muted);text-transform:uppercase}
+    .value{font-size:clamp(1.2rem,2vw,1.95rem);font-weight:800;margin-top:8px}
+    .delta{font-size:.84rem;color:var(--muted);margin-top:8px}
+    .good{color:var(--green)} .warn{color:var(--amber)} .bad{color:var(--red)}
+    .layout{grid-template-columns:1.4fr 1fr;align-items:start}
+    .panel{padding:18px}
+    .panel h2{margin:0 0 14px;font-size:1.06rem}
+    .overview{
+      display:grid;grid-template-columns:1.25fr .95fr;gap:16px
+    }
+    .statusHero{
+      min-height:168px;
+      display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:12px;
+      align-items:stretch
+    }
+    .heroMain,.heroSide{
+      border:1px solid var(--line);border-radius:18px;
+      background:linear-gradient(135deg, rgba(17,24,39,.95), rgba(12,18,33,.9));
+      padding:18px
+    }
+    .heroMain .big{font-size:2rem;font-weight:900;margin-top:8px}
+    .heroMain .desc{color:var(--muted);margin-top:6px}
+    .statusPill{
+      display:inline-flex;align-items:center;gap:8px;padding:8px 12px;
+      border-radius:999px;background:rgba(74,222,128,.1);border:1px solid rgba(74,222,128,.18)
+    }
+    .dot{width:10px;height:10px;border-radius:50%;background:var(--green);box-shadow:0 0 18px var(--green)}
+    .heroSide .mini{font-size:.82rem;color:var(--muted)}
+    .heroSide .num{font-size:1.35rem;font-weight:800;margin-top:12px}
+    .donutWrap{display:grid;grid-template-columns:370px 1fr;gap:8px;align-items:center}
+    .donut{
+      width:310px;height:310px;margin:0 auto;position:relative;display:grid;place-items:center
+    }
+    .donut svg{transform:rotate(-90deg)}
+    .donutCenter{
+      position:absolute;width:148px;height:148px;border-radius:50%;
+      display:grid;place-items:center;text-align:center;
+      background:radial-gradient(circle at 50% 35%, rgba(15,23,42,.95), rgba(2,6,23,.98));
+      border:1px solid rgba(255,255,255,.06)
+    }
+    .donutCenter strong{font-size:1.05rem}
+    .donutCenter span{display:block;color:var(--muted);font-size:.83rem;margin-top:4px}
+    .legend{display:grid;gap:10px}
+    .legendItem{
+      display:flex;justify-content:space-between;align-items:center;gap:12px;
+      border:1px solid var(--line);border-radius:16px;padding:12px 14px;background:rgba(15,23,42,.48)
+    }
+    .legendL{display:flex;align-items:center;gap:10px}
+    .sw{width:12px;height:12px;border-radius:50%}
+    .bars{display:grid;gap:12px}
+    .barRow{display:grid;gap:6px}
+    .barHead{display:flex;justify-content:space-between;gap:12px;color:var(--muted);font-size:.88rem}
+    .bar{
+      height:12px;border-radius:999px;background:rgba(148,163,184,.11);overflow:hidden;border:1px solid rgba(255,255,255,.03)
+    }
+    .bar > span{
+      display:block;height:100%;border-radius:999px;background:linear-gradient(90deg, var(--cyan), var(--violet))
+    }
+    .tableWrap{overflow:auto}
+    .scrollPane{max-height:520px;overflow:auto;padding-right:4px}
+    .scrollPane.compact{max-height:360px}
+    .scrollPane::-webkit-scrollbar{width:8px;height:8px}
+    .scrollPane::-webkit-scrollbar-thumb{background:rgba(148,163,184,.28);border-radius:999px}
+    .scrollPane::-webkit-scrollbar-track{background:transparent}
+    table{width:100%;border-collapse:collapse}
+    th,td{padding:12px 10px;text-align:left;border-bottom:1px solid rgba(148,163,184,.12);font-size:.92rem;vertical-align:top}
+    th{color:#cbd5e1;font-size:.8rem;text-transform:uppercase;letter-spacing:.08em}
+    tbody tr:hover{background:rgba(255,255,255,.02)}
+    .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace}
+    .pillState{
+      display:inline-flex;align-items:center;gap:8px;border-radius:999px;padding:6px 10px;
+      font-size:.8rem;border:1px solid rgba(255,255,255,.08)
+    }
+    .state-active{background:rgba(74,222,128,.12);color:#86efac}
+    .state-connecting{background:rgba(251,191,36,.12);color:#fcd34d}
+    .state-closed{background:rgba(148,163,184,.12);color:#cbd5e1}
+    .state-error{background:rgba(251,113,133,.12);color:#fda4af}
+    .split{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+    .footer{margin-top:14px;color:var(--muted);font-size:.86rem;text-align:right}
+    .small{font-size:.84rem;color:var(--muted)}
+    .empty{
+      padding:28px;border:1px dashed rgba(148,163,184,.25);border-radius:18px;color:var(--muted);text-align:center
+    }
+
+    .walletGrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}
+    .walletCard{padding:16px;border:1px solid var(--line);border-radius:18px;background:linear-gradient(180deg, rgba(17,24,39,.92), rgba(15,23,42,.76));box-shadow:var(--shadow)}
+    .walletCard.blocked{border-color:rgba(251,113,133,.42);background:linear-gradient(180deg, rgba(60,14,24,.86), rgba(33,12,20,.72))}
+    .walletHead{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;margin-bottom:10px}
+    .walletMeta{display:grid;gap:6px;margin-top:10px}
+    .walletMeta .row{display:flex;justify-content:space-between;gap:10px;font-size:.88rem;color:var(--muted)}
+    .walletMeta strong{color:var(--text)}
+    .btnSmall{cursor:pointer;border:1px solid var(--line);background:rgba(15,23,42,.72);color:var(--text);padding:8px 12px;border-radius:12px}
+    .btnDanger{border-color:rgba(251,113,133,.35);color:#fecdd3;background:rgba(127,29,29,.22)}
+    .btnSuccess{border-color:rgba(74,222,128,.28);color:#bbf7d0;background:rgba(20,83,45,.24)}
+    .codeBox{padding:9px 10px;border-radius:12px;background:rgba(2,6,23,.55);border:1px solid rgba(255,255,255,.06);font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;font-size:.8rem;word-break:break-all}
+
+    @media (max-width: 1120px){
+      .layout,.overview,.donutWrap,.statusHero,.split{grid-template-columns:1fr}
+      .stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+      .donut{width:280px;height:280px}
+    }
+    @media (max-width: 680px){
+      .stats{grid-template-columns:1fr}
+      .wrap{padding:16px 12px 32px}
+      .top{align-items:flex-start}
+      th:nth-child(6),td:nth-child(6),th:nth-child(7),td:nth-child(7){display:none}
+    }
+  </style>
+</head>
+<body>
+<div class="wrap">
+<div class="top">
+<div class="brand">
+<div class="logo">⚡</div>
+<div>
+<h1>WSProxy Monitoring Dashboard</h1>
+<div class="sub"></div>
+</div>
+</div>
+<div class="toolbar">
+<div class="chip">API: <b id="apiState">connecting</b></div>
+<div class="chip">Refresh: <b id="countdown">10s</b></div>
+<button class="btn" id="refreshBtn">Refresh sekarang</button>
+</div>
+</div>
+<div class="grid stats">
+<div class="card">
+<div class="label">Total Connections</div>
+<div class="value" id="totalConnections">0</div>
+<div class="delta"></div>
+</div>
+<div class="card">
+<div class="label">Active Workers</div>
+<div class="value" id="activeConnections">0</div>
+<div class="delta good" id="activeHint"></div>
+</div>
+<div class="card">
+<div class="label">Upload Traffic</div>
+<div class="value" id="upTraffic">0 B</div>
+<div class="delta"></div>
+</div>
+<div class="card">
+<div class="label">Download Traffic</div>
+<div class="value" id="downTraffic">0 B</div>
+<div class="delta"></div>
+</div>
+</div>
+<div class="grid layout">
+<div class="grid" style="gap:16px">
+<div class="panel">
+<h2>Pool Status</h2>
+<div class="statusHero">
+<div class="heroMain">
+<div class="statusPill"><span class="dot"></span><span id="heroStatusText">ONLINE</span></div>
+<div class="big" id="heroBig">0 Active Connections</div>
+<div class="desc"></div>
+</div>
+<div class="heroSide">
+<div class="mini">Unique IP</div>
+<div class="num" id="uniqueIps">0</div>
+<div class="small"></div>
+</div>
+<div class="heroSide">
+<div class="mini">Last Update</div>
+<div class="num" id="lastUpdate">-</div>
+<div class="small"></div>
+</div>
+</div>
+</div>
+<div class="panel overview">
+<div>
+<h2>Connection Distribution</h2>
+<div class="donutWrap">
+<div class="donut">
+<svg aria-hidden="true" height="310" viewbox="0 0 310 310" width="310">
+<circle cx="155" cy="155" fill="none" r="110" stroke="rgba(148,163,184,.12)" stroke-width="26"></circle>
+<circle cx="155" cy="155" fill="none" id="ringActive" r="110" stroke="url(#grad1)" stroke-dasharray="0 999" stroke-linecap="round" stroke-width="26"></circle>
+<circle cx="155" cy="155" fill="none" id="ringError" r="78" stroke="url(#grad2)" stroke-dasharray="0 999" stroke-linecap="round" stroke-width="18"></circle>
+<defs>
+<lineargradient id="grad1" x1="0%" x2="100%" y1="0%" y2="100%">
+<stop offset="0%" stop-color="#38bdf8"></stop>
+<stop offset="100%" stop-color="#818cf8"></stop>
+</lineargradient>
+<lineargradient id="grad2" x1="0%" x2="100%" y1="0%" y2="100%">
+<stop offset="0%" stop-color="#fbbf24"></stop>
+<stop offset="100%" stop-color="#fb7185"></stop>
+</lineargradient>
+</defs>
+</svg>
+<div class="donutCenter">
+<div>
+<strong id="donutCenterValue">0</strong>
+<span>Total Status</span>
+</div>
+</div>
+</div>
+<div class="legend" id="legend"></div>
+</div>
+</div>
+<div>
+<h2>Top Targets</h2>
+<div class="bars" id="topTargetsBars"></div>
+</div>
+</div>
+<div class="panel">
+<h2>Live Connections</h2>
+<div class="tableWrap scrollPane">
+<table>
+<thead>
+<tr>
+<th>IP Client</th>
+<th>Target</th>
+<th>Status</th>
+<th>Uptime</th>
+<th>Traffic</th>
+<th>Started</th>
+<th>Last Activity</th>
+</tr>
+</thead>
+<tbody id="liveTable"></tbody>
+</table>
+</div>
+</div>
+</div>
+<div class="grid" style="gap:16px">
+<div class="panel">
+<h2>System Summary</h2>
+<div class="split">
+<div class="card">
+<div class="label">Messages In</div>
+<div class="value" id="msgIn">0</div>
+<div class="delta"></div>
+</div>
+<div class="card">
+<div class="label">Messages Out</div>
+<div class="value" id="msgOut">0</div>
+<div class="delta"></div>
+</div>
+<div class="card">
+<div class="label">Closed Connections</div>
+<div class="value" id="closedCount">0</div>
+<div class="delta"></div>
+</div>
+<div class="card">
+<div class="label">Errors</div>
+<div class="value" id="errorCount">0</div>
+<div class="delta bad"></div>
+</div>
+</div>
+</div>
+<div class="panel">
+<h2>Recent Events</h2>
+<div class="scrollPane compact"><div id="recentEvents"></div></div>
+</div>
+<div class="panel">
+<h2>Top IP Sources</h2>
+<div class="bars scrollPane compact" id="topIpBars"></div>
+</div>
+<div class="panel">
+<h2>Wallet Monitor</h2>
+<div class="walletGrid" id="walletList"></div>
+</div>
+</div>
+</div>
+<div class="footer"></div>
+</div>
+<script>
+    const REFRESH_MS = 10000;
+    let remaining = Math.floor(REFRESH_MS / 1000);
+    let timerId = null;
+
+    const el = (id) => document.getElementById(id);
+
+    function num(n){ return new Intl.NumberFormat('id-ID').format(Number(n || 0)); }
+    function fmtBytes(bytes){
+      const n = Number(bytes || 0);
+      const units = ['B','KB','MB','GB','TB'];
+      let i = 0, v = n;
+      while(v >= 1024 && i < units.length - 1){ v /= 1024; i++; }
+      return `${v >= 100 || i === 0 ? v.toFixed(0) : v.toFixed(2)} ${units[i]}`;
+    }
+    function fmtTimeAgo(iso){
+      if(!iso) return '-';
+      const diff = Math.max(0, Date.now() - new Date(iso).getTime());
+      const sec = Math.floor(diff / 1000);
+      if(sec < 60) return `${sec} dtk lalu`;
+      const min = Math.floor(sec / 60);
+      if(min < 60) return `${min} mnt lalu`;
+      const hr = Math.floor(min / 60);
+      if(hr < 24) return `${hr} jam lalu`;
+      const day = Math.floor(hr / 24);
+      return `${day} hr lalu`;
+    }
+    function fmtClock(iso){
+      if(!iso) return '-';
+      return new Date(iso).toLocaleString('id-ID', {
+        year:'numeric', month:'2-digit', day:'2-digit',
+        hour:'2-digit', minute:'2-digit', second:'2-digit'
+      });
+    }
+    function fmtDuration(start, end){
+      if(!start) return '-';
+      const a = new Date(start).getTime();
+      const b = end ? new Date(end).getTime() : Date.now();
+      let sec = Math.max(0, Math.floor((b - a)/1000));
+      const h = Math.floor(sec/3600); sec%=3600;
+      const m = Math.floor(sec/60); sec%=60;
+      return `${h}j ${m}m ${sec}d`;
+    }
+    function escapeHtml(str){
+      return String(str ?? '').replace(/[&<>"']/g, (m)=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m]));
+    }
+    function stateClass(status){
+      const s = String(status || '').toUpperCase();
+      if(s === 'ACTIVE') return 'state-active';
+      if(s === 'CONNECTING') return 'state-connecting';
+      if(s === 'ERROR') return 'state-error';
+      return 'state-closed';
+    }
+    function ringDash(circleId, value, total){
+      const circle = el(circleId);
+      const radius = Number(circle.getAttribute('r'));
+      const circumference = 2 * Math.PI * radius;
+      const pct = total > 0 ? Math.max(0, Math.min(1, value / total)) : 0;
+      circle.setAttribute('stroke-dasharray', `${circumference * pct} ${circumference}`);
+    }
+    function aggregateCounts(connections){
+      const counts = { ACTIVE:0, CONNECTING:0, CLOSED:0, ERROR:0 };
+      for(const c of connections){
+        const s = String(c.status || 'CLOSED').toUpperCase();
+        if(counts[s] == null) counts[s] = 0;
+        counts[s]++;
+      }
+      return counts;
+    }
+    function topMap(items, keyFn, valFn = () => 1, limit = 6){
+      const map = new Map();
+      for(const item of items){
+        const key = keyFn(item) || '-';
+        map.set(key, (map.get(key) || 0) + valFn(item));
+      }
+      return [...map.entries()].sort((a,b) => b[1]-a[1]).slice(0, limit);
+    }
+
+    const BLOCK_STORAGE_KEY = 'wsproxy_blocked_wallets_v1';
+
+    function getBlockedWallets(){
+      try{ return JSON.parse(localStorage.getItem(BLOCK_STORAGE_KEY) || '[]'); }catch(_){ return []; }
+    }
+    function setBlockedWallets(list){
+      localStorage.setItem(BLOCK_STORAGE_KEY, JSON.stringify([...new Set(list.filter(Boolean))]));
+    }
+    function isBlockedWallet(wallet){
+      return getBlockedWallets().includes(String(wallet || '').trim());
+    }
+    function toggleWalletBlock(wallet){
+      const key = String(wallet || '').trim();
+      if(!key) return;
+      const list = getBlockedWallets();
+      const next = list.includes(key) ? list.filter(v => v !== key) : [...list, key];
+      setBlockedWallets(next);
+      loadDashboard();
+    }
+    function encodeBase64(value){
+      try{ return btoa(unescape(encodeURIComponent(String(value || '')))); }catch(_){ return btoa(String(value || '')); }
+    }
+    function resolveWallet(c){
+      const direct = c.wallet || c.rawLogin || c.username || c.user || c.login || c.address || c.miner || c.workerName || c.worker || c.account || c.authUser;
+      if(direct) return String(direct);
+      const raw = [c.target, c.host, c.pool, c.poolHost, c.query, c.raw, c.loginPayload].filter(Boolean).join(' ');
+      const m = raw.match(/([13][a-km-zA-HJ-NP-Z1-9]{25,34}|bc1[0-9a-z]{20,87}|[48][0-9AB][1-9A-HJ-NP-Za-km-z]{93}|0x[a-fA-F0-9]{40}|TR[0-9A-Za-z]{20,50}|[LM3][a-km-zA-HJ-NP-Z1-9]{26,50}|Q[0-9A-Za-z]{20,120})/);
+      return m ? m[1] : 'UNKNOWN';
+    }
+    function resolvePoolPort(c){
+      const host = c.poolHost || c.host || (String(c.target || '').split(':')[0]);
+      const port = c.poolPort || c.port || (String(c.target || '').split(':')[1]);
+      return [host || '-', port || '-'].join(':');
+    }
+    function walletSummary(connections){
+      const map = new Map();
+      for(const c of connections){
+        const wallet = resolveWallet(c);
+        const poolPort = resolvePoolPort(c);
+        const key = `${wallet}__${poolPort}`;
+        if(!map.has(key)){
+          map.set(key, { wallet, poolPort, workers:0, active:0, traffic:0, lastActivity:null, blocked:isBlockedWallet(wallet) });
+        }
+        const row = map.get(key);
+        row.workers += 1;
+        if(['ACTIVE','CONNECTING'].includes(String(c.status || '').toUpperCase())) row.active += 1;
+        row.traffic += Number(c.bytesFromClient || 0) + Number(c.bytesToClient || 0);
+        const act = c.lastActivity || c.startTime || null;
+        if(act && (!row.lastActivity || new Date(act) > new Date(row.lastActivity))) row.lastActivity = act;
+        row.blocked = isBlockedWallet(wallet);
+      }
+      return [...map.values()].sort((a,b) => (Number(b.blocked)-Number(a.blocked)) || b.workers-a.workers || b.traffic-a.traffic);
+    }
+    function renderWalletList(connections){
+      const rows = walletSummary(connections);
+      el('walletList').innerHTML = rows.length ? rows.map(row => `
+        <div class="walletCard ${row.blocked ? 'blocked' : ''}">
+          <div class="walletHead">
+            <div>
+              <div class="label">Wallet</div>
+              <div class="value mono" style="font-size:1rem;margin-top:6px">${escapeHtml(row.wallet)}</div>
+            </div>
+            <button class="btnSmall ${row.blocked ? 'btnSuccess' : 'btnDanger'}" onclick="toggleWalletBlock('${escapeHtml(row.wallet).replace(/'/g, '&#39;')}')">${row.blocked ? 'Unlock' : 'Block'}</button>
+          </div>
+          <div class="walletMeta">
+            <div class="row"><span>Pool:Port</span><strong class="mono">${escapeHtml(row.poolPort)}</strong></div>
+            <div class="row"><span>Pool:Port Base64</span></div>
+            <div class="codeBox">${escapeHtml(encodeBase64(row.poolPort))}</div>
+            <div class="row"><span>Total Worker</span><strong>${num(row.workers)}</strong></div>
+            <div class="row"><span>Worker Aktif</span><strong>${num(row.active)}</strong></div>
+            <div class="row"><span>Total Traffic</span><strong>${fmtBytes(row.traffic)}</strong></div>
+            <div class="row"><span>Last Activity</span><strong>${escapeHtml(fmtTimeAgo(row.lastActivity))}</strong></div>
+            <div class="row"><span>Status</span><strong class="${row.blocked ? 'bad' : 'good'}">${row.blocked ? 'BLOCKED' : 'UNLOCKED'}</strong></div>
+          </div>
+        </div>
+      `).join('') : `<div class="empty">Wallet belum bisa dibaca dari API koneksi</div>`;
+    }
+
+    function renderLegend(counts){
+      const order = [
+        ['ACTIVE','Aktif','#38bdf8'],
+        ['CONNECTING','Connecting','#fbbf24'],
+        ['CLOSED','Closed','#94a3b8'],
+        ['ERROR','Error','#fb7185']
+      ];
+      const total = Object.values(counts).reduce((a,b)=>a+b,0);
+      el('legend').innerHTML = order.map(([key,label,color]) => `
+        <div class="legendItem">
+          <div class="legendL">
+            <span class="sw" style="background:${color}"></span>
+            <span>${label}</span>
+          </div>
+          <strong>${num(counts[key] || 0)}${total ? ` · ${Math.round((counts[key]||0)*100/total)}%` : ''}</strong>
+        </div>
+      `).join('');
+      el('donutCenterValue').textContent = num(total);
+      ringDash('ringActive', (counts.ACTIVE||0) + (counts.CONNECTING||0), Math.max(total,1));
+      ringDash('ringError', counts.ERROR||0, Math.max(total,1));
+    }
+    function renderBars(containerId, rows, formatter){
+      const total = rows.reduce((a,b)=>a+b[1],0) || 1;
+      const html = rows.length ? rows.map(([name, value]) => `
+        <div class="barRow">
+          <div class="barHead">
+            <span class="mono">${escapeHtml(name)}</span>
+            <strong>${formatter ? formatter(value) : num(value)}</strong>
+          </div>
+          <div class="bar"><span style="width:${Math.max(6, Math.round(value*100/total))}%"></span></div>
+        </div>
+      `).join('') : `<div class="empty">Belum ada data</div>`;
+      el(containerId).innerHTML = html;
+    }
+    function renderRecentEvents(connections){
+      const recent = [...connections]
+        .filter(c => String(c.status || '').toUpperCase() === 'ACTIVE')
+        .sort((a,b) => new Date(b.lastActivity || b.startTime || 0) - new Date(a.lastActivity || a.startTime || 0))
+        .slice(0,10);
+
+      el('recentEvents').innerHTML = recent.length ? recent.map(c => `
+        <div class="legendItem" style="margin-bottom:10px">
+          <div>
+            <div><strong class="mono">${escapeHtml(c.ip || '-')}</strong> → <span class="mono">${escapeHtml(c.target || '-')}</span></div>
+            <div class="small">${fmtTimeAgo(c.lastActivity || c.startTime)} · ${escapeHtml(c.status || '-')}</div>
+          </div>
+          <span class="pillState ${stateClass(c.status)}">${escapeHtml(c.status || 'UNKNOWN')}</span>
+        </div>
+      `).join('') : `<div class="empty">Belum ada event aktif</div>`;
+    }
+    function renderLiveTable(connections){
+      const sorted = [...connections]
+        .filter(c => String(c.status || '').toUpperCase() === 'ACTIVE')
+        .sort((a,b) => new Date(b.lastActivity || b.startTime || 0) - new Date(a.lastActivity || a.startTime || 0))
+        .slice(0, 10);
+
+      el('liveTable').innerHTML = sorted.length ? sorted.map(c => `
+        <tr>
+          <td class="mono">${escapeHtml(c.ip || '-')}</td>
+          <td>
+            <div class="mono">${escapeHtml(c.target || '-')}</div>
+            <div class="small">${escapeHtml(c.host || '-')} : ${escapeHtml(c.port || '-')}</div>
+          </td>
+          <td><span class="pillState ${stateClass(c.status)}">${escapeHtml(c.status || 'UNKNOWN')}</span></td>
+          <td>${fmtDuration(c.startTime, c.endTime)}</td>
+          <td>${fmtBytes((c.bytesFromClient||0) + (c.bytesToClient||0))}</td>
+          <td>${fmtClock(c.startTime)}</td>
+          <td>${fmtTimeAgo(c.lastActivity)}</td>
+        </tr>
+      `).join('') : `<tr><td colspan="7"><div class="empty">Belum ada koneksi aktif</div></td></tr>`;
+    }
+
+    async function loadDashboard(){
+      try{
+        const res = await fetch('/api/dashboard', { cache:'no-store' });
+        if(!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        applyData(data);
+        el('apiState').textContent = 'online';
+        el('apiState').style.color = '#86efac';
+      }catch(err){
+        el('apiState').textContent = 'offline';
+        el('apiState').style.color = '#fda4af';
+        console.error(err);
+      }finally{
+        remaining = Math.floor(REFRESH_MS / 1000);
+        el('countdown').textContent = `${remaining}s`;
+      }
+    }
+
+    function applyData(data){
+      const connections = Array.isArray(data.connections) ? data.connections : [];
+      const counts = aggregateCounts(connections);
+
+      const totalConnections = Number(data.totalConnections ?? connections.length ?? 0);
+      const activeConnections = Number(data.activeConnections ?? counts.ACTIVE + counts.CONNECTING);
+      const uploadBytes = connections.reduce((a,c)=>a + Number(c.bytesFromClient || 0), 0);
+      const downloadBytes = connections.reduce((a,c)=>a + Number(c.bytesToClient || 0), 0);
+      const msgIn = connections.reduce((a,c)=>a + Number(c.messagesFromClient || 0), 0);
+      const msgOut = connections.reduce((a,c)=>a + Number(c.messagesToClient || 0), 0);
+      const uniqueIps = new Set(connections.map(c => c.ip).filter(Boolean)).size;
+      const topTargets = topMap(connections, c => c.target, c => Number(c.bytesFromClient||0) + Number(c.bytesToClient||0), 6);
+      const topIps = topMap(connections, c => c.ip, () => 1, 10);
+
+      el('totalConnections').textContent = num(totalConnections);
+      el('activeConnections').textContent = num(activeConnections);
+      el('activeHint').textContent = activeConnections > 0 ? `${num(activeConnections)} worker aktif sekarang` : 'Belum ada koneksi aktif';
+      el('upTraffic').textContent = fmtBytes(uploadBytes);
+      el('downTraffic').textContent = fmtBytes(downloadBytes);
+      el('heroBig').textContent = `${num(activeConnections)} Active Connections`;
+      el('heroStatusText').textContent = activeConnections > 0 ? 'ONLINE' : 'IDLE';
+      el('uniqueIps').textContent = num(uniqueIps);
+      el('lastUpdate').textContent = fmtTimeAgo(data.updatedAt || new Date().toISOString());
+      el('msgIn').textContent = num(msgIn);
+      el('msgOut').textContent = num(msgOut);
+      el('closedCount').textContent = num(counts.CLOSED || 0);
+      el('errorCount').textContent = num(counts.ERROR || 0);
+
+      renderLegend(counts);
+      renderBars('topTargetsBars', topTargets, fmtBytes);
+      renderBars('topIpBars', topIps, num);
+      renderRecentEvents(connections);
+      renderLiveTable(connections);
+      renderWalletList(connections);
+    }
+
+    function startTimers(){
+      if(timerId) clearInterval(timerId);
+      timerId = setInterval(() => {
+        remaining--;
+        if(remaining <= 0){
+          loadDashboard();
+        }else{
+          el('countdown').textContent = `${remaining}s`;
+        }
+      }, 1000);
+    }
+
+    el('refreshBtn').addEventListener('click', loadDashboard);
+
+    loadDashboard();
+    startTimers();
+  </script>
+</body>
+</html>
